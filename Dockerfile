@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 # ---- runtime ----------------------------------------------------------------
-FROM python:3.12-slim-bookworm AS runtime
+FROM python:3.14-slim-bookworm AS runtime
 
 LABEL org.opencontainers.image.title="skywalking-zabbix-mcp" \
       org.opencontainers.image.description="Unified observability MCP server: SkyWalking (OAP GraphQL) + Zabbix, with cross-stack correlation." \
