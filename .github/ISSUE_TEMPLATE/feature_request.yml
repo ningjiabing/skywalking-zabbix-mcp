@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest a new tool, prompt or capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve
+      description: The troubleshooting situation you are stuck in today.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: The tool, argument or behaviour you have in mind.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - SkyWalking tools
+        - Zabbix tools
+        - Cross-stack correlation
+        - Prompts / resources
+        - Transport / deployment
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

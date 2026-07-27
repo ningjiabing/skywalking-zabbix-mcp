@@ -1,0 +1,70 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste credentials, real hostnames or internal IPs.** Redact them before submitting.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The tool call or prompt, and the arguments you used.
+      placeholder: |
+        1. Configure with SW_URL=... (redacted)
+        2. Call diagnose_service("192.0.2.11::payment-service")
+        3. See error
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `skywalking-zabbix-mcp --version`
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: oap-version
+    attributes:
+      label: SkyWalking OAP version
+      placeholder: "9.7.0"
+
+  - type: input
+    id: zabbix-version
+    attributes:
+      label: Zabbix version (if the Zabbix side is involved)
+      placeholder: "4.0.x"
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options: [stdio, sse, streamable]
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12.4"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Run with `SW_LOG_LEVEL=debug` and paste the relevant output (redacted).
+      render: shell

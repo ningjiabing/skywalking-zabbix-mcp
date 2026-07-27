@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+*.png binary
+*.gif binary
+*.jpg binary
+
+# Generated artefacts: keep them out of diffs and out of the language stats.
+uv.lock linguist-generated=true -diff
+docs/demo.svg linguist-generated=true -diff
+
+# Not part of the shipped server.
+tests/** linguist-vendored=true
+docs/** linguist-documentation=true

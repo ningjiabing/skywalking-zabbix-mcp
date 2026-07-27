@@ -1,0 +1,82 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.ningjiabing/skywalking-zabbix-mcp",
+  "description": "Unified observability MCP server: SkyWalking (OAP GraphQL) + Zabbix, with cross-stack correlation.",
+  "repository": {
+    "url": "https://github.com/ningjiabing/skywalking-zabbix-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "skywalking-zabbix-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SW_URL",
+          "description": "SkyWalking OAP address; /graphql is appended automatically.",
+          "isRequired": true,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "SW_USERNAME",
+          "description": "SkyWalking Basic Auth user; leave unset if the OAP has no auth.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "SW_PASSWORD",
+          "description": "SkyWalking Basic Auth password.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "ZABBIX_URL",
+          "description": "Full path to Zabbix api_jsonrpc.php. Setting it enables the Zabbix and cross-stack correlation tools.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "ZABBIX_USER",
+          "description": "Zabbix account user.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "ZABBIX_PASSWORD",
+          "description": "Zabbix account password.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "READ_ONLY",
+          "description": "Reject every Zabbix JSON-RPC method that is not *.get. Recommended.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "boolean",
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "registryType": "oci",
+      "registryBaseUrl": "https://ghcr.io",
+      "identifier": "ghcr.io/ningjiabing/skywalking-zabbix-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

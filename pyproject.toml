@@ -1,0 +1,125 @@
+[project]
+name = "skywalking-zabbix-mcp"
+dynamic = ["version"]
+description = "Unified observability MCP server: SkyWalking (OAP GraphQL) + Zabbix, with cross-stack correlation."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "ningjiabing", email = "meilijing.ning@gmail.com" }]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "skywalking",
+    "zabbix",
+    "observability",
+    "apm",
+    "monitoring",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Monitoring",
+]
+dependencies = [
+    "fastmcp>=2.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ningjiabing/skywalking-zabbix-mcp"
+Repository = "https://github.com/ningjiabing/skywalking-zabbix-mcp"
+Issues = "https://github.com/ningjiabing/skywalking-zabbix-mcp/issues"
+
+[project.scripts]
+skywalking-zabbix-mcp = "skywalking_zabbix_mcp.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+# Single source of truth: __version__ in the package.
+path = "src/skywalking_zabbix_mcp/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/skywalking_zabbix_mcp"]
+# resources_data/*.md and *.json ship as package data (hatchling includes all
+# files under the package dir, not just *.py).
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "respx>=0.21.1",
+    "ruff>=0.6.0",
+    "mypy>=1.11.0",
+    "pre-commit>=3.7.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "C4",   # comprehensions
+    "SIM",  # simplify
+    "RUF",
+]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "RUF001", # ambiguous unicode in docstrings/prompt text is intentional
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# GraphQL documents are full of literal braces; %-interpolation keeps them
+# readable where an f-string would need every brace doubled.
+"src/skywalking_zabbix_mcp/queries.py" = ["UP031"]
+# Tests reach into private helpers on purpose.
+"tests/*" = ["B011"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src", "tests"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unreachable = true
+no_implicit_optional = true
+check_untyped_defs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers --strict-config"
+
+[tool.coverage.run]
+source = ["src/skywalking_zabbix_mcp"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    'if __name__ == "__main__":',
+]

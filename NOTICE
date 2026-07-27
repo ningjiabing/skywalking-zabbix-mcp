@@ -1,0 +1,18 @@
+skywalking-zabbix-mcp
+Copyright 2026 ningjiabing
+
+This product is licensed under the Apache License, Version 2.0.
+
+--------------------------------------------------------------------------------
+
+This product includes software derived from the Apache SkyWalking MCP server
+(https://github.com/apache/skywalking-mcp): the GraphQL query documents, tool
+semantics and prompt texts were ported from Go to Python and modified to support
+older SkyWalking OAP releases. Source files containing such derived material
+carry the Apache Software Foundation license header.
+
+Apache SkyWalking
+Copyright 2017-2026 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
