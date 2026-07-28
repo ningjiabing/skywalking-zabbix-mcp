@@ -48,7 +48,15 @@ def register(mcp, backend: Backend) -> None:
         Each service belongs to one or more layers. Use list_layers first to discover
         available layers. The response includes each service's id, name, group,
         shortName, layers and normal flag; the id filters other tools (query_logs,
-        query_traces). Example: {"layer": "GENERAL"}."""
+        query_traces). Example: {"layer": "GENERAL"}.
+
+        This is the metadata registry. To check whether a service exists, or to get
+        the complete service list, use THIS tool — never infer the roster from metric
+        rankings (cpm / resp_time top-N): a service with no traffic in the queried
+        window is absent from metrics yet still registered here, so ranking-based
+        lists silently miss idle services. Do not guess service names semantically
+        either; match the user's intent against the real names returned here.
+        Business/application services usually live in the GENERAL layer."""
         try:
             return to_json(backend.result(queries.LIST_SERVICE, {"layer": layer}))
         except GraphQLError as exc:

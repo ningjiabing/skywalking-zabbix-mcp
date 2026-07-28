@@ -138,7 +138,7 @@ READ_ONLY = "true"
 codex mcp add obs -- uvx skywalking-zabbix-mcp
 ```
 
-注意 Codex 的配置是 TOML、键名是 `mcp_servers`（下划线），跟 Claude/Cursor 的 JSON `mcpServers` 不一样。口令建议留在 shell 环境变量里，由 Codex 进程继承，不要写进 `config.toml`。
+注意 Codex 的配置是 TOML、键名是 `mcp_servers`（下划线），跟 Claude/Cursor 的 JSON `mcpServers` 不一样。口令建议放进 `.env`（server 启动自动加载），不要写进 `config.toml` 明文。
 </details>
 
 <details>
@@ -227,10 +227,17 @@ server 会用 `diagnose_service` 一次返回该服务的应用指标（cpm / �
 
 ## 配置
 
-全部通过环境变量。凭据类支持 `${ENV}` 展开（如 `SW_PASSWORD=${MY_SW_PWD}`），避免明文。示例见 `.env.example`。
+全部通过环境变量，可写进 `.env` 或客户端注册的 `env` 块。**server 启动时自动加载 `.env`** —— 配置写一次，所有 MCP 客户端（Claude Code / Cursor / Codex…）共享，注册里就不用再写 `env`。凭据类支持 `${ENV}` 展开（如 `SW_PASSWORD=${MY_SW_PWD}`），避免明文。示例见 `.env.example`。
+
+```bash
+cp .env.example .env && chmod 600 .env   # 填真实值即可，.env 已被 .gitignore 忽略
+```
+
+> 优先级：客户端注入的 env > `.env`（`override=False`），两者可并存。用 `ENV_FILE` 可指定加载别的路径。
 
 | 变量 | 说明 | 默认 |
 |---|---|---|
+| `ENV_FILE` | 指定加载哪个 `.env` 文件；不设则找就近的 `.env` | 空 |
 | `SW_URL` | OAP 地址，自动补 `/graphql` | `http://localhost:12800/graphql` |
 | `SW_USERNAME` / `SW_PASSWORD` | SkyWalking Basic Auth | 空 |
 | `SW_INSECURE` | 跳过 TLS 校验（仅测试用） | `false` |

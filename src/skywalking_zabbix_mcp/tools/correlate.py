@@ -52,6 +52,12 @@ def register(mcp, backend: Backend, client: ZabbixClient) -> None:
         - service_name: the SkyWalking service name, e.g. "192.0.2.11::payment-service"
           (the IP is extracted to locate the Zabbix host). A bare name works too, but
           then the Zabbix side is skipped unless an IP is present.
+        Pass the exact registered name — confirm it with list_services first, do not
+        guess. Null/zero metrics here do NOT mean the service is absent or down:
+        request-based metrics (cpm/sla) are structurally null for WebSocket/long-
+        connection services regardless of load, and a briefly quiet service still
+        exists in list_services. Check there before telling the user a service does
+        not exist, and see the "hint" field returned when all metrics are null.
         Returns {service, ip, skywalking:{metrics,alarms}, zabbix:{host,problems,items}}."""
         ip = _extract_ip(service_name)
         out: dict[str, Any] = {"service": service_name, "ip": ip}
@@ -72,6 +78,34 @@ def register(mcp, backend: Backend, client: ZabbixClient) -> None:
             except ToolError as exc:
                 metrics[label] = f"<error: {exc}>"
         sw["metrics"] = metrics
+        # If every metric is empty (not an error), the service is registered but had
+        # no sampled traffic in this window. Guide the caller to the right follow-up
+        # tools instead of concluding the service is down.
+        real_vals = [
+            v for v in metrics.values()
+            if not (isinstance(v, str) and v.startswith("<error"))
+        ]
+        if real_vals and all(v in (None, "", [], {}, "null") for v in real_vals):
+            sw["hint"] = (
+                "cpm/resp_time/sla are null. These count discrete HTTP request-"
+                "response calls per minute. For a WebSocket or other long-connection "
+                "service this is STRUCTURAL, not a problem: held connections carry "
+                "frames over a socket that was opened once, so they generate no per-"
+                "minute request count — a fully loaded WS server with thousands of "
+                "live sessions still reports null here. Do NOT read null as idle or "
+                "down. To judge a long-connection service's real load, use signals "
+                "that reflect held connections rather than request rate: (1) "
+                "list_instances + instance JVM metrics — live thread count and a heap "
+                "GC sawtooth (a busy WS server holds many threads and churns heap "
+                "steadily); (2) the host's Zabbix network throughput (net.if in/out "
+                "bps) and TCP established connection count; (3) query_traces / "
+                "query_logs (start=-24h) for the background work it still does. Only "
+                "conclude the service is quiet if JVM threads are low AND host network/"
+                "connections are low. To find upstream callers use "
+                "query_services_topology(layer=...) filtered by name (the scoped, "
+                "service_ids form may 400 on some OAP versions). Host health is in the "
+                "zabbix section below."
+            )
         try:
             sw["alarms"] = _sw_alarms(backend, keyword=service_name, start=start, end=end)
         except GraphQLError as exc:
