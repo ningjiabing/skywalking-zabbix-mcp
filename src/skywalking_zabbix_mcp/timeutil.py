@@ -56,6 +56,29 @@ _GO_DURATION_UNIT = {
 }
 _GO_DUR_TOKEN = re.compile(r"([0-9]*\.?[0-9]+)(ns|us|µs|ms|s|m|h)")
 
+# Go's ParseDuration stops at hours. Days and weeks are accepted only for
+# explicitly signed offsets (see parse_relative_offset), so the bare legacy form
+# "7d" ("the last 7 days") keeps its own meaning.
+_EXT_DURATION_UNIT = {**_GO_DURATION_UNIT, "d": 86400.0, "w": 604800.0}
+_EXT_DUR_TOKEN = re.compile(r"([0-9]*\.?[0-9]+)(ns|us|µs|ms|s|m|h|d|w)")
+
+
+def _accumulate_duration(
+    s: str, token_re: re.Pattern[str], units: dict[str, float]
+) -> float | None:
+    """Sum a unit-suffixed token sequence ("2h45m"); None if anything fails to match."""
+    pos = 0
+    total = 0.0
+    matched = False
+    while pos < len(s):
+        m = token_re.match(s, pos)
+        if not m:
+            return None
+        total += float(m.group(1)) * units[m.group(2)]
+        pos = m.end()
+        matched = True
+    return total if matched else None
+
 
 def go_parse_duration(text: str) -> timedelta | None:
     """Parse a Go time.ParseDuration string (e.g. "-30m", "1.5h", "2h45m").
@@ -73,19 +96,26 @@ def go_parse_duration(text: str) -> timedelta | None:
         s = s[1:]
     if not s:
         return None
-    pos = 0
-    total = 0.0
-    matched = False
-    while pos < len(s):
-        m = _GO_DUR_TOKEN.match(s, pos)
-        if not m:
-            return None
-        total += float(m.group(1)) * _GO_DURATION_UNIT[m.group(2)]
-        pos = m.end()
-        matched = True
-    if not matched:
+    total = _accumulate_duration(s, _GO_DUR_TOKEN, _GO_DURATION_UNIT)
+    return None if total is None else timedelta(seconds=sign * total)
+
+
+def parse_relative_offset(text: str) -> timedelta | None:
+    """Parse a signed offset for the start/end parameters, e.g. "-7d", "-1w".
+
+    Extends Go's units with days and weeks: operators naturally write "-7d" for a
+    weekly inspection, and because Go rejects it the window used to collapse
+    silently to the 30m default. The sign is what enables the extension, leaving
+    the unsigned legacy form ("7d" = the last 7 days) to its own parser.
+    """
+    if not text:
         return None
-    return timedelta(seconds=sign * total)
+    s = text.strip()
+    if s[:1] not in ("+", "-"):
+        return go_parse_duration(s)
+    sign = -1.0 if s[0] == "-" else 1.0
+    total = _accumulate_duration(s[1:], _EXT_DUR_TOKEN, _EXT_DURATION_UNIT)
+    return None if total is None else timedelta(seconds=sign * total)
 
 
 # --- Time context ------------------------------------------------------------
@@ -201,7 +231,7 @@ def _parse_time_string(time_str: str, default_time: datetime, tc: TimeContext) -
         return default_time
     if time_str.lower() == NOW_KEYWORD:
         return now
-    rel = go_parse_duration(time_str)
+    rel = parse_relative_offset(time_str)
     if rel is not None:
         return now + rel
     absolute = _parse_absolute_time(time_str, tc.location)

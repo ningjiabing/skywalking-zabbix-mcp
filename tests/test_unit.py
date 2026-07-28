@@ -10,6 +10,7 @@ from skywalking_zabbix_mcp.timeutil import (
     build_duration_with_context,
     go_parse_duration,
     parse_duration_with_context,
+    parse_relative_offset,
 )
 from skywalking_zabbix_mcp.tools.mqe import (
     _nesting_depth,
@@ -50,6 +51,31 @@ def test_relative_duration_step_adaptive():
     assert d["start"] == "2026-07-21 1130"
     assert d["end"] == "2026-07-21 1200"
     assert "coldStage" not in d
+
+
+def test_signed_day_and_week_offsets():
+    """Days/weeks must widen the window instead of silently collapsing to the
+    30m default, which is what Go's unit set (ns..h) used to cause."""
+    day = 86400
+    assert parse_relative_offset("-1d").total_seconds() == -day
+    assert parse_relative_offset("-7d").total_seconds() == -7 * day
+    assert parse_relative_offset("-30d").total_seconds() == -30 * day
+    assert parse_relative_offset("-1w").total_seconds() == -7 * day
+    assert parse_relative_offset("-2w").total_seconds() == -14 * day
+    assert parse_relative_offset("-1.5d").total_seconds() == -1.5 * day
+    assert parse_relative_offset("-1d12h").total_seconds() == -1.5 * day
+    # hour/minute forms keep working, and nonsense still falls back
+    assert parse_relative_offset("-90m").total_seconds() == -5400
+    assert parse_relative_offset("-7x") is None
+    # unsigned stays Go-only so the legacy "7d" = last 7 days keeps its meaning
+    assert parse_relative_offset("7d") is None
+
+
+def test_day_offset_produces_full_window():
+    d = build_duration_with_context("-7d", "now", "HOUR", False, 30, FIXED)
+    assert d["start"] == "2026-07-14 12"
+    assert d["end"] == "2026-07-21 12"
+    assert d["step"] == "HOUR"
 
 
 def test_legacy_duration_days():
