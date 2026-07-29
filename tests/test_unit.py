@@ -53,19 +53,27 @@ def test_relative_duration_step_adaptive():
     assert "coldStage" not in d
 
 
+def offset_seconds(text: str) -> float:
+    """parse_relative_offset returns None for junk; assert it parsed before
+    reading the delta so the tests stay type-checkable."""
+    delta = parse_relative_offset(text)
+    assert delta is not None
+    return delta.total_seconds()
+
+
 def test_signed_day_and_week_offsets():
     """Days/weeks must widen the window instead of silently collapsing to the
     30m default, which is what Go's unit set (ns..h) used to cause."""
     day = 86400
-    assert parse_relative_offset("-1d").total_seconds() == -day
-    assert parse_relative_offset("-7d").total_seconds() == -7 * day
-    assert parse_relative_offset("-30d").total_seconds() == -30 * day
-    assert parse_relative_offset("-1w").total_seconds() == -7 * day
-    assert parse_relative_offset("-2w").total_seconds() == -14 * day
-    assert parse_relative_offset("-1.5d").total_seconds() == -1.5 * day
-    assert parse_relative_offset("-1d12h").total_seconds() == -1.5 * day
+    assert offset_seconds("-1d") == -day
+    assert offset_seconds("-7d") == -7 * day
+    assert offset_seconds("-30d") == -30 * day
+    assert offset_seconds("-1w") == -7 * day
+    assert offset_seconds("-2w") == -14 * day
+    assert offset_seconds("-1.5d") == -1.5 * day
+    assert offset_seconds("-1d12h") == -1.5 * day
     # hour/minute forms keep working, and nonsense still falls back
-    assert parse_relative_offset("-90m").total_seconds() == -5400
+    assert offset_seconds("-90m") == -5400
     assert parse_relative_offset("-7x") is None
     # unsigned stays Go-only so the legacy "7d" = last 7 days keeps its meaning
     assert parse_relative_offset("7d") is None
