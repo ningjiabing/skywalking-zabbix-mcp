@@ -82,8 +82,7 @@ def register(mcp, backend: Backend, client: ZabbixClient) -> None:
         # no sampled traffic in this window. Guide the caller to the right follow-up
         # tools instead of concluding the service is down.
         real_vals = [
-            v for v in metrics.values()
-            if not (isinstance(v, str) and v.startswith("<error"))
+            v for v in metrics.values() if not (isinstance(v, str) and v.startswith("<error"))
         ]
         if real_vals and all(v in (None, "", [], {}, "null") for v in real_vals):
             sw["hint"] = (
